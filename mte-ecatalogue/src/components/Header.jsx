@@ -1,7 +1,5 @@
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
 export const Header = ({
   position = 'right',
   colors = ['#B19EEF', '#5227FF'],
@@ -15,11 +13,9 @@ export const Header = ({
   openMenuButtonColor = '#000',
   changeMenuColorOnOpen = true,
   accentColor = '#5227FF',
-  maskSections = [],
 }) => {
   const [open, setOpen] = useState(false);
   const openRef = useRef(false);
-
   const panelRef = useRef(null);
   const preLayersRef = useRef(null);
   const preLayerElsRef = useRef([]);
@@ -37,10 +33,6 @@ export const Header = ({
   const toggleBtnRef = useRef(null);
   const busyRef = useRef(false);
   const itemEntranceTweenRef = useRef(null);
-  const logoRef = useRef(null);
-  const clipRectRef = useRef(null);
-
-  
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const panel = panelRef.current;
@@ -65,9 +57,6 @@ export const Header = ({
     });
     return () => ctx.revert();
   }, [menuButtonColor, position]);
-
-
-
   const buildOpenTimeline = useCallback(() => {
     const panel = panelRef.current;
     const layers = preLayerElsRef.current;
@@ -248,23 +237,19 @@ export const Header = ({
       ease: 'power4.out'
     });
   }, []);
-
   const toggleMenu = useCallback(() => {
     const target = !openRef.current;
     openRef.current = target;
     setOpen(target);
-
     if (target) {
       playOpen();
     } else {
       playClose();
     }
-
     animateIcon(target);
     animateColor(target);
     animateText(target);
   }, [playOpen, playClose, animateIcon, animateColor, animateText]);
-
   const handleLinkClick = (e, link) => {
     e.preventDefault();
     console.log(`Scrolling to ${link}`);
@@ -277,48 +262,6 @@ export const Header = ({
       toggleMenu();
     }
   };
-
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      if (maskSections.length > 0 && logoRef.current && clipRectRef.current) {
-        ScrollTrigger.create({
-          trigger: "main",
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 0.5, // Menambahkan scrub untuk animasi yang lebih halus
-          onUpdate: (self) => {
-            const logoBounds = logoRef.current.getBoundingClientRect();
-            let totalMaskHeight = 0;
-            let intersectionStart = Infinity;
-
-            maskSections.forEach(sectionRef => {
-              if (sectionRef.current) {
-                const sectionBounds = sectionRef.current.getBoundingClientRect();
-                const top = Math.max(logoBounds.top, sectionBounds.top);
-                const bottom = Math.min(logoBounds.bottom, sectionBounds.bottom);
-                
-                if (top < bottom) {
-                  intersectionStart = Math.min(intersectionStart, top);
-                  totalMaskHeight = Math.max(totalMaskHeight, bottom - intersectionStart);
-                }
-              }
-            });
-
-            const yOffset = Math.max(0, intersectionStart - logoBounds.top);
-
-            gsap.set(clipRectRef.current, {
-              attr: {
-                y: (yOffset / logoBounds.height) * 40,
-                height: (totalMaskHeight / logoBounds.height) * 40
-              }
-            });
-          }
-        });
-      }
-    });
-    return () => ctx.revert();
-  }, [maskSections]);
-
   return (
     <div className="sm-scope fixed top-0 left-0 w-full h-auto z-50">
       <div
@@ -348,33 +291,20 @@ export const Header = ({
             ));
           })()}
         </div>
-
         <header
           className="staggered-menu-header relative w-full flex items-center justify-between p-[2em] bg-transparent z-20"
           aria-label="Main navigation header"
         >
-            <div ref={logoRef} className="sm-logo relative h-10 w-auto pointer-events-auto" aria-label="Logo">
-                <img
-                    src={logoUrl}
-                    alt="Logo"
-                    className="absolute top-0 left-0 h-full w-full object-contain"
-                />
-                <svg className="absolute top-0 left-0 h-full w-full" viewBox="0 0 110 40" preserveAspectRatio="xMidYMid meet">
-                    <defs>
-                        <clipPath id="logo-clip-path">
-                            <rect ref={clipRectRef} x="0" y="0" width="110" height="0" />
-                        </clipPath>
-                    </defs>
-                    <image
-                    href={logoUrl}
-                    width="110"
-                    height="40"
-                    clipPath="url(#logo-clip-path)"
-                    className="invert"
-                    />
-                </svg>
-            </div>
-
+          <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
+            <img
+              src={logoUrl}
+              alt="Logo"
+              className="sm-logo-img block h-10 w-auto object-contain"
+              draggable={false}
+              width={110}
+              height={24}
+            />
+          </div>
           <button
             ref={toggleBtnRef}
             className="sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 cursor-pointer text-[#e9e9ef] font-medium leading-none overflow-visible pointer-events-auto"
@@ -397,7 +327,6 @@ export const Header = ({
                 ))}
               </span>
             </span>
-
             <span
               ref={iconRef}
               className="sm-icon relative w-[14px] h-[14px] shrink-0 inline-flex items-center justify-center [will-change:transform]"
@@ -414,7 +343,6 @@ export const Header = ({
             </span>
           </button>
         </header>
-
         <aside
           id="staggered-menu-panel"
           ref={panelRef}
@@ -454,142 +382,134 @@ export const Header = ({
                 </li>
               )}
             </ul>
-            
           </div>
         </aside>
       </div>
-
       <style>{`
-        .sm-scope .staggered-menu-wrapper { 
-            position: relative; 
-            width: 100%; 
-            height: 100%; 
-            pointer-events: none; /* Biarkan wrapper transparan terhadap klik */
+        .sm-scope .staggered-menu-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
         }
-        .sm-scope .staggered-menu-header > * { 
-            pointer-events: auto; /* Aktifkan klik hanya untuk logo dan tombol */
+        .sm-scope .staggered-menu-header > * {
+            pointer-events: auto;
         }
-        .sm-scope .sm-logo-img { 
-            display: block; 
-            width: auto; 
-            object-fit: contain; 
+        .sm-scope .sm-logo-img {
+            display: block;
+            width: auto;
+            object-fit: contain;
         }
-        .sm-scope .staggered-menu-wrapper[data-open] .sm-logo-img { 
-            filter: invert(1); 
+        .sm-scope .staggered-menu-wrapper[data-open] .sm-logo-img {
+            filter: invert(1);
         }
-        .sm-scope .sm-toggle { 
-            position: relative; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 0.5rem; 
-            background: transparent; 
-            border: none; 
-            cursor: pointer; 
-            color: #e9e9ef; 
-            font-weight: 500; 
-            line-height: 1; 
+        .sm-scope .sm-toggle {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #e9e9ef;
+            font-weight: 500;
+            line-height: 1;
         }
-        .sm-scope .sm-toggle-textWrap { 
-            position: relative; 
-            display: inline-block; 
-            height: 1em; 
-            overflow: hidden; 
+        .sm-scope .sm-toggle-textWrap {
+            position: relative;
+            display: inline-block;
+            height: 1em;
+            overflow: hidden;
         }
-        .sm-scope .sm-toggle-textInner { 
-            display: flex; 
-            flex-direction: column; 
-            line-height: 1; 
+        .sm-scope .sm-toggle-textInner {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
         }
-        .sm-scope .sm-toggle-line { 
-            display: block; 
-            height: 1em; 
-            line-height: 1; 
+        .sm-scope .sm-toggle-line {
+            display: block;
+            height: 1em;
+            line-height: 1;
         }
-        .sm-scope .sm-icon { 
-            position: relative; 
-            width: 14px; 
-            height: 14px; 
-            flex-shrink: 0; 
+        .sm-scope .sm-icon {
+            position: relative;
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
         }
-        .sm-scope .sm-panel-itemWrap { 
-            overflow: hidden; 
+        .sm-scope .sm-panel-itemWrap {
+            overflow: hidden;
         }
-        .sm-scope .sm-icon-line { 
-            position: absolute; 
-            left: 50%; 
-            top: 50%; 
-            width: 100%; 
-            height: 2px; 
-            background: currentColor; 
-            border-radius: 2px; 
-            transform: translate(-50%, -50%); 
+        .sm-scope .sm-icon-line {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 100%;
+            height: 2px;
+            background: currentColor;
+            border-radius: 2px;
+            transform: translate(-50%, -50%);
         }
-        /* Panel Menu Utama */
-        .sm-scope .staggered-menu-panel { 
-            width: clamp(300px, 40vw, 420px); 
-            pointer-events: auto; /* Pastikan panel bisa di-klik */
+        .sm-scope .staggered-menu-panel {
+            width: clamp(300px, 40vw, 420px);
+            pointer-events: auto;
         }
-        .sm-scope .sm-prelayers { 
-            width: clamp(300px, 40vw, 420px); 
-            z-index: 5; 
+        .sm-scope .sm-prelayers {
+            width: clamp(300px, 40vw, 420px);
+            z-index: 5;
         }
-        .sm-scope .sm-panel-inner { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
+        .sm-scope .sm-panel-inner {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
-        /* Tampilan Rata Kiri & Rapi untuk Item Menu */
-        .sm-scope .sm-panel-list { 
-            list-style: none; 
-            margin: 0; 
-            padding: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: flex-start; 
-            gap: 1.5rem; 
+        .sm-scope .sm-panel-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.5rem;
         }
-        .sm-scope .sm-panel-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: baseline; 
-            width: 100%; 
-            color: #000; 
-            font-weight: 600; 
-            font-size: 2.5rem; 
-            line-height: 1.1; 
-            text-transform: uppercase; 
-            text-decoration: none; 
+        .sm-scope .sm-panel-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            width: 100%;
+            color: #000;
+            font-weight: 600;
+            font-size: 2.5rem;
+            line-height: 1.1;
+            text-transform: uppercase;
+            text-decoration: none;
             transition: color 0.25s;
         }
-        .sm-scope .sm-panel-item:hover { 
-            color: var(--sm-accent, #ff0000); 
+        .sm-scope .sm-panel-item:hover {
+            color: var(--sm-accent, #ff0000);
         }
-        .sm-scope .sm-panel-itemLabel { 
-            display: inline-block; 
+        .sm-scope .sm-panel-itemLabel {
+            display: inline-block;
         }
-        /* Styling untuk Nomor */
-        .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { 
-            content: '0' counter(smItem); 
-            counter-increment: smItem; 
-            font-size: 1rem; 
-            font-weight: 400; 
-            color: var(--sm-accent, #ff0000); 
-            opacity: var(--sm-num-opacity, 0); 
-            margin-left: 1rem; /* Beri jarak antara teks dan nomor */
+        .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after {
+            content: '0' counter(smItem);
+            counter-increment: smItem;
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--sm-accent, #ff0000);
+            opacity: var(--sm-num-opacity, 0);
+            margin-left: 1rem;
         }
-        /* Responsif untuk Mobile */
-        @media (max-width: 1024px) { 
-            .sm-scope .staggered-menu-panel, 
-            .sm-scope .sm-prelayers { 
-            width: 100%; 
-            left: 0; 
-            right: 0; 
-            } 
+        @media (max-width: 1024px) {
+            .sm-scope .staggered-menu-panel,
+            .sm-scope .sm-prelayers {
+            width: 100%;
+            left: 0;
+            right: 0;
+            }
         }
-        .sm-scope .invert { filter: invert(1); }
         `}</style>
     </div>
   );
 };
-
 export default Header;

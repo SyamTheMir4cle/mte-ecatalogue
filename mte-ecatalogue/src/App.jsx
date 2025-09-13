@@ -11,7 +11,7 @@ import Products from './components/Products';
 import Contact from './components/Contact';
 import Footer from './components/footer';
 import './App.css';
-import Logo from './assets/mte.svg';
+import Logo from './assets/mte.png'; // Ubah dari .svg menjadi .png
 
 gsap.registerPlugin(SplitText, ScrollTrigger, ScrollToPlugin);
 
