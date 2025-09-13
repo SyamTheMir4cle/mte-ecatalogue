@@ -1,5 +1,6 @@
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 export const Header = ({
   position = 'right',
@@ -14,6 +15,7 @@ export const Header = ({
   openMenuButtonColor = '#000',
   changeMenuColorOnOpen = true,
   accentColor = '#5227FF',
+  maskSections = [],
 }) => {
   const [open, setOpen] = useState(false);
   const openRef = useRef(false);
@@ -35,6 +37,8 @@ export const Header = ({
   const toggleBtnRef = useRef(null);
   const busyRef = useRef(false);
   const itemEntranceTweenRef = useRef(null);
+  const logoRef = useRef(null);
+  const clipRectRef = useRef(null);
 
   
   useLayoutEffect(() => {
@@ -61,6 +65,9 @@ export const Header = ({
     });
     return () => ctx.revert();
   }, [menuButtonColor, position]);
+
+
+
   const buildOpenTimeline = useCallback(() => {
     const panel = panelRef.current;
     const layers = preLayerElsRef.current;
@@ -271,6 +278,47 @@ export const Header = ({
     }
   };
 
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      if (maskSections.length > 0 && logoRef.current && clipRectRef.current) {
+        ScrollTrigger.create({
+          trigger: "main",
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 0.5, // Menambahkan scrub untuk animasi yang lebih halus
+          onUpdate: (self) => {
+            const logoBounds = logoRef.current.getBoundingClientRect();
+            let totalMaskHeight = 0;
+            let intersectionStart = Infinity;
+
+            maskSections.forEach(sectionRef => {
+              if (sectionRef.current) {
+                const sectionBounds = sectionRef.current.getBoundingClientRect();
+                const top = Math.max(logoBounds.top, sectionBounds.top);
+                const bottom = Math.min(logoBounds.bottom, sectionBounds.bottom);
+                
+                if (top < bottom) {
+                  intersectionStart = Math.min(intersectionStart, top);
+                  totalMaskHeight = Math.max(totalMaskHeight, bottom - intersectionStart);
+                }
+              }
+            });
+
+            const yOffset = Math.max(0, intersectionStart - logoBounds.top);
+
+            gsap.set(clipRectRef.current, {
+              attr: {
+                y: (yOffset / logoBounds.height) * 40,
+                height: (totalMaskHeight / logoBounds.height) * 40
+              }
+            });
+          }
+        });
+      }
+    });
+    return () => ctx.revert();
+  }, [maskSections]);
+
   return (
     <div className="sm-scope fixed top-0 left-0 w-full h-auto z-50">
       <div
@@ -304,23 +352,28 @@ export const Header = ({
         <header
           className="staggered-menu-header relative w-full flex items-center justify-between p-[2em] bg-transparent z-20"
           aria-label="Main navigation header"
-            style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-        }}
         >
-          <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
-            <img
-              src={logoUrl}
-              alt="Logo"
-              className="sm-logo-img block h-10 w-auto object-contain"
-              draggable={false}
-              width={110}
-              height={24}
-            />
-          </div>
+            <div ref={logoRef} className="sm-logo relative h-10 w-auto pointer-events-auto" aria-label="Logo">
+                <img
+                    src={logoUrl}
+                    alt="Logo"
+                    className="absolute top-0 left-0 h-full w-full object-contain"
+                />
+                <svg className="absolute top-0 left-0 h-full w-full" viewBox="0 0 110 40" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <clipPath id="logo-clip-path">
+                            <rect ref={clipRectRef} x="0" y="0" width="110" height="0" />
+                        </clipPath>
+                    </defs>
+                    <image
+                    href={logoUrl}
+                    width="110"
+                    height="40"
+                    clipPath="url(#logo-clip-path)"
+                    className="invert"
+                    />
+                </svg>
+            </div>
 
           <button
             ref={toggleBtnRef}
@@ -533,6 +586,7 @@ export const Header = ({
             right: 0; 
             } 
         }
+        .sm-scope .invert { filter: invert(1); }
         `}</style>
     </div>
   );

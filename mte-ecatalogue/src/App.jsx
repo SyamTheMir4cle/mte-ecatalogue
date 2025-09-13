@@ -2,6 +2,7 @@ import { gsap } from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+import React, { useRef } from 'react'; // Pastikan useRef diimpor dari react
 
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -54,20 +55,29 @@ const menuItems = [
   { label: 'Contact', link: '#contact' }
 ];
 
+
 function App() {
+  const aboutRef = useRef(null);
+  const productsRef = useRef(null);
+  const contactRef = useRef(null);
+  const footerRef = useRef(null);
+  
+  const maskSections = [aboutRef, productsRef, contactRef, footerRef];
+
   return (
     <div className="relative w-full" style={{ background: '#1a1a1a' }}>
       <Header
         items={menuItems}
         logoUrl={Logo}
+        maskSections={maskSections}
       />
       <main>
         <Hero />
-        <AboutUs />
-        <Products productList={productList} /> 
-        <Contact productList={productList} />
+        <div ref={aboutRef}><AboutUs /></div>
+        <div ref={productsRef}><Products productList={productList} /></div>
+        <div ref={contactRef}><Contact productList={productList} /></div>
       </main>
-      <Footer />
+      <div ref={footerRef}><Footer /></div>
     </div>
   );
 }
